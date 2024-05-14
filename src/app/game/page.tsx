@@ -6,7 +6,6 @@ import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-
 export default function Game(){
     const user = useAuth();
     const router = useRouter();
@@ -21,52 +20,105 @@ export default function Game(){
     }
     const sketch = (p5: P5CanvasInstance) => {
         if(!user)return;
+        class Rectangle {
+            // クラスの型宣言
+            x: number
+            y: number
+            w: number
+            h: number
+            // constructorの引数に型宣言
+            constructor(x: number,y: number,w: number,h: number) {
+                this.x = x;
+                this.y = y;
+                this.w = w;
+                this.h = h;
+            }
+            // クラスのメソッド(関数)に型宣言
+            display_figure(): void {
+                p5.rect(this.x,this.y,this.w,this.h,3);   
+            }
+            onMouse():boolean{
+                return this.x <= p5.mouseX && p5.mouseX <= this.x + this.w && this.y <= p5.mouseY && p5.mouseY <= this.y + this.h;
+            }
+        }
+        let button:Rectangle;
+        let control:number = 0;
+        let Time:number[] = new Array(5);
+        let Gy2 = 0;
+        let fallCn = 0;
+        let Gy = 0;
+        let rotate = 0;
         p5.setup = () => {
-            p5.createCanvas(400, 400);
-            p5.background(255,200,200);
+            p5.createCanvas(1200, 720);
+            button =  new Rectangle(p5.width/2-200,500,400,90);
         };
         p5.mouseReleased = () => {
-            if(40 <= p5.mouseX && p5.mouseX <= 140 && 40 <= p5.mouseY && p5.mouseY <= 80){    
-                handleButton();
+            if(button.onMouse()){
+                if(control == 0){
+                    control = 1;
+                    Time[0] = 0;
+                    fallCn = 4;
+                    Gy2 = 0;
+                    Gy = 0;
+                }
             }
         };
-        let x = 0;
-        let y = 0;
-        let W_key:boolean = false;
-        let A_key:boolean = false;
-        let S_key:boolean = false;
-        let D_key:boolean = false;
-        p5.keyPressed = () => {
-            if(p5.key == 'w')W_key = true;
-            if(p5.key == 'a')A_key = true;
-            if(p5.key == 's')S_key = true;
-            if(p5.key == 'd')D_key = true;
-        }
-        p5.keyReleased = () => {
-            if(p5.key == 'w')W_key = false;
-            if(p5.key == 'a')A_key = false;
-            if(p5.key == 's')S_key = false;
-            if(p5.key == 'd')D_key = false;
-        }
         p5.draw = () => {
             p5.background(255,200,200);
-            p5.fill(255);
-            p5.ellipse(x,y,50,50);
-            p5.text(user.name,0,50);
-            if(W_key) y -= 3;
-            if(S_key) y += 3;
-            if(A_key) x -= 3;
-            if(D_key) x += 3;
-            if(x < 25)x = 25;
-            if(x > p5.width-25)x = p5.width-25;
-            if(y < 25)y = 25;
-            if(y > p5.height-25)y = p5.height-25;
+            if(control == 0){
+                p5.strokeWeight(5);
+                p5.stroke(0);
+                if(button.onMouse()){
+                    p5.fill(120,200,250);
+                }else{
+                    p5.fill(100,160,220);
+                }
+                button.display_figure();
+                p5.textSize(70);
+                p5.fill(0);
+                p5.noStroke();
+                p5.text("ガチャる",button.x+(50),button.y+button.h-20);
+            }else if(control == 1){
+                p5.strokeWeight(5);
+                p5.stroke(0);
+                p5.fill(190,90,110);
+                if(Time[1] < -40)p5.translate(0,-100*Math.pow(Math.sin(p5.radians(60+Time[1])*10),2));
+                p5.translate(p5.width/2,Gy);
+                p5.rotate(rotate);
+                p5.arc(0,Gy2,100,100,0,Math.PI);
+                p5.fill(255,0,0);
+                p5.arc(0,-Gy2,100,100,Math.PI,0);
+                p5.line(-50,+Gy2,50,+Gy2);
+                p5.line(-50,-Gy2,50,-Gy2);
+                p5.rotate(-rotate);
+                p5.translate(-p5.width/2,-Gy);
+                if(Time[1] < -40)p5.translate(0,+100*Math.pow(Math.sin(p5.radians(60+Time[1])*10),2));
+                if(Gy < 500){    
+                    Gy += 8+40/(1+Math.exp(-Time[0]/10));
+                    if(Gy >= 500){
+                        Time[1] = -60;
+                    }
+                }else{
+                    if(Time[1] >= 0){
+                        Gy2 += 5 - 5/(1+Math.exp(-Time[1]/10));
+                        p5.fill(255,255,255,Time[1]*8);
+                        p5.noStroke();
+                        p5.rect(0,0,p5.width,p5.height);
+                    }else if(Time[1] >= -40){
+                        rotate = p5.radians(40*Math.sin(p5.radians(40+Time[1])*18)) * Math.exp((-40-Time[1])/40);
+                        
+                    }
+                }
+            }
+            for(let i = 0; i < Time.length; i++){
+                Time[i] ++;
+            }
         };
     };
 
     if(user){
         return(        
-            <div>
+            <div style={{display:"flex",justifyContent:"center",alignItems:"center",flexDirection:"column"}}>
                 <p>ゲーム画面</p>
                 <SketchComponent sketch={sketch}></SketchComponent>
             </div>
