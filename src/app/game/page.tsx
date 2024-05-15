@@ -42,24 +42,34 @@ export default function Game(){
             }
         }
         let button:Rectangle;
+        let back_button:Rectangle;
         let control:number = 0;
         let Time:number[] = new Array(5);
         let Gy2 = 0;
-        let fallCn = 0;
         let Gy = 0;
+        let GameCoins = 0;
         let rotate = 0;
+        let GameKind = 0;
         p5.setup = () => {
+            GameCoins = 1000;
             p5.createCanvas(1200, 720);
             button =  new Rectangle(p5.width/2-200,500,400,90);
+            back_button = new Rectangle(p5.width/2-240,600,480,80);
         };
         p5.mouseReleased = () => {
             if(button.onMouse()){
-                if(control == 0){
+                if(control == 0 && GameCoins >= 150){
+                    GameCoins -= 150;
                     control = 1;
                     Time[0] = 0;
-                    fallCn = 4;
                     Gy2 = 0;
                     Gy = 0;
+                    GameKind = Math.floor(p5.random(0,10));
+                }
+            }
+            if(back_button.onMouse()){
+                if(control == 2){
+                    control = 0;
                 }
             }
         };
@@ -78,6 +88,8 @@ export default function Game(){
                 p5.fill(0);
                 p5.noStroke();
                 p5.text("ガチャる",button.x+(50),button.y+button.h-20);
+                p5.textSize(35);
+                p5.text("ゲームコイン:"+GameCoins,0,40);
             }else if(control == 1){
                 p5.strokeWeight(5);
                 p5.stroke(0);
@@ -85,11 +97,11 @@ export default function Game(){
                 if(Time[1] < -40)p5.translate(0,-100*Math.pow(Math.sin(p5.radians(60+Time[1])*10),2));
                 p5.translate(p5.width/2,Gy);
                 p5.rotate(rotate);
-                p5.arc(0,Gy2,100,100,0,Math.PI);
+                p5.arc(0,Gy2,200,200,0,Math.PI);
                 p5.fill(255,0,0);
-                p5.arc(0,-Gy2,100,100,Math.PI,0);
-                p5.line(-50,+Gy2,50,+Gy2);
-                p5.line(-50,-Gy2,50,-Gy2);
+                p5.arc(0,-Gy2,200,200,Math.PI,0);
+                p5.line(-100,+Gy2,100,+Gy2);
+                p5.line(-100,-Gy2,100,-Gy2);
                 p5.rotate(-rotate);
                 p5.translate(-p5.width/2,-Gy);
                 if(Time[1] < -40)p5.translate(0,+100*Math.pow(Math.sin(p5.radians(60+Time[1])*10),2));
@@ -104,10 +116,38 @@ export default function Game(){
                         p5.fill(255,255,255,Time[1]*8);
                         p5.noStroke();
                         p5.rect(0,0,p5.width,p5.height);
+                        if(Time[1] >= 45){
+                            Time[2] = -25;
+                            control = 2;
+                        }
                     }else if(Time[1] >= -40){
-                        rotate = p5.radians(40*Math.sin(p5.radians(40+Time[1])*18)) * Math.exp((-40-Time[1])/40);
-                        
+                        rotate = p5.radians(45*Math.sin(p5.radians(40+Time[1])*18)) * Math.exp((-40-Time[1])/20);
                     }
+                }
+            }else if(control == 2){
+                p5.textSize(200);
+                p5.fill(0);
+                p5.textAlign("center");
+                p5.text(GameKind,p5.width/2,300);
+                p5.textAlign("left");
+                if(Time[2] < 0){
+                    p5.fill(255,255,255,255-(25+Time[2])*8);
+                    p5.noStroke();
+                    p5.rect(0,0,p5.width,p5.height);
+                }
+                if(Time[2] > 30){
+                    p5.strokeWeight(5);
+                    p5.stroke(0);
+                    if(back_button.onMouse()){
+                        p5.fill(120,200,250);
+                    }else{
+                        p5.fill(100,160,220);
+                    }
+                    back_button.display_figure();
+                    p5.fill(0);
+                    p5.noStroke();
+                    p5.textSize(60);
+                    p5.text("ゲームスタート",back_button.x+(25),back_button.y+back_button.h-15);
                 }
             }
             for(let i = 0; i < Time.length; i++){
