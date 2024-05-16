@@ -1,10 +1,7 @@
-//p5.jsを使う例
 "use client"
 import dynamic from "next/dynamic";
 import React from "react";
 import { P5WrapperProps, Sketch, SketchProps } from "@p5-wrapper/react";
-import { P5CanvasInstance } from "@p5-wrapper/react";
-import { useRouter } from "next/navigation";
 
 const ReactP5Wrapper = dynamic(
   () => import("@p5-wrapper/react").then((mod) => mod.ReactP5Wrapper as any),

@@ -5,6 +5,7 @@ import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { get, getDatabase, push, ref, remove, serverTimestamp, set } from "firebase/database";
 
 export default function Game(){
     const user = useAuth();
@@ -50,13 +51,14 @@ export default function Game(){
         let GameCoins = 0;
         let rotate = 0;
         let GameKind = 0;
+        let result = "";
         p5.setup = () => {
             GameCoins = 1000;
             p5.createCanvas(1200, 720);
             button =  new Rectangle(p5.width/2-200,500,400,90);
             back_button = new Rectangle(p5.width/2-240,600,480,80);
         };
-        p5.mouseReleased = () => {
+        p5.mouseReleased = async() => {
             if(button.onMouse()){
                 if(control == 0 && GameCoins >= 150){
                     GameCoins -= 150;
@@ -64,12 +66,32 @@ export default function Game(){
                     Time[0] = 0;
                     Gy2 = 0;
                     Gy = 0;
-                    GameKind = Math.floor(p5.random(0,10));
+                    GameKind = Math.floor(p5.random(0,5));
+                    const db = getDatabase(); 
+                    const userdeleteInfo = ref(db, `userInfo/${user.id}`);
+                    await get(userdeleteInfo).then(async(info) => {
+                        if(!info.val())return;
+                        const userGameRef = ref(db, `userGame/${info.val().game}`);
+                        await remove(userGameRef);
+                    })
+                    const dbRef = ref(db, 'userGame');
+                    await push(dbRef, {
+                        user:user.id,
+                        kind:GameKind,
+                    }).then(async(gameInfo) => {
+                        if(!gameInfo.key)return;
+                        result = gameInfo.key;
+                        const userInfo = ref(db, `userInfo/${user.id}`);
+                        await set(userInfo,{
+                            exit:true,
+                            game:result  
+                        })
+                    })
                 }
             }
             if(back_button.onMouse()){
                 if(control == 2){
-                    control = 0;
+                    router.push(`/game/${result}`);
                 }
             }
         };
