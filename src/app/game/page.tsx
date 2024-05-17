@@ -4,23 +4,59 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { get, getDatabase, push, ref, remove, serverTimestamp, set } from "firebase/database";
+import { use, useEffect, useState } from "react";
+import { UserInfo } from "@/types/user";
+import { get, getDatabase, onValue, push, ref, remove, serverTimestamp, set, update } from "firebase/database";
 
 export default function Game(){
     const user = useAuth();
     const router = useRouter();
+    const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
+    const handleCreateInitUserInfo = async() => {
+        if(!user)return;
+        const db = getDatabase();
+        const userInfoRef = ref(db,`userInfo/${user.id}`);
+        await set(userInfoRef,{
+            game:"",
+            coins:1000,
+        }).then((inf) => {
+            setUinf({game:"",coins:1000});
+        });
+    }
+    const handleSetUserInfo = async() => {
+        if(!user)return;
+        const db = getDatabase();
+        const userInfoRef = ref(db,`userInfo/${user.id}`);
+        await onValue(userInfoRef,(snap) => {
+            if(!snap.val()){
+                setUinf(null);
+            }else{
+                setUinf({game:snap.val().game,coins:snap.val().coins});
+            }
+        },{onlyOnce:true})
+    }
     useEffect(() => {
         if(user === null){
             router.push('/');
         }
+        if(!user)return;
+        handleSetUserInfo();
+        
     },[user]);
+    useEffect(() => {
+        if(!user)return;
+        if(uinf === null){
+            handleCreateInitUserInfo();
+        }
+    },[uinf])
 
     const handleButton = () => {
         router.push("/hogehoge");
     }
-    const sketch = (p5: P5CanvasInstance) => {
-        if(!user)return;
+    const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
+        if(!user || !uinf)return;
+
+        
         class Rectangle {
             // クラスの型宣言
             x: number
@@ -52,11 +88,15 @@ export default function Game(){
         let rotate = 0;
         let GameKind = 0;
         let result = "";
-        p5.setup = () => {
-            GameCoins = 1000;
+        p5.setup = async() => {
+            result = uinf.game;
+            GameCoins = uinf.coins;
             p5.createCanvas(1200, 720);
             button =  new Rectangle(p5.width/2-200,500,400,90);
             back_button = new Rectangle(p5.width/2-240,600,480,80);
+            const db = getDatabase(); 
+            const userGameRef = ref(db, `userGame/${result}`);
+            await remove(userGameRef);
         };
         p5.mouseReleased = async() => {
             if(button.onMouse()){
@@ -68,12 +108,7 @@ export default function Game(){
                     Gy = 0;
                     GameKind = Math.floor(p5.random(0,5));
                     const db = getDatabase(); 
-                    const userdeleteInfo = ref(db, `userInfo/${user.id}`);
-                    await get(userdeleteInfo).then(async(info) => {
-                        if(!info.val())return;
-                        const userGameRef = ref(db, `userGame/${info.val().game}`);
-                        await remove(userGameRef);
-                    })
+                    
                     const dbRef = ref(db, 'userGame');
                     await push(dbRef, {
                         user:user.id,
@@ -82,10 +117,10 @@ export default function Game(){
                         if(!gameInfo.key)return;
                         result = gameInfo.key;
                         const userInfo = ref(db, `userInfo/${user.id}`);
-                        await set(userInfo,{
-                            exit:true,
-                            game:result  
-                        })
+                        await update(userInfo,{
+                            game:result,
+                            coins:GameCoins
+                        }).then((e) => {console.log(e);})
                     })
                 }
             }
