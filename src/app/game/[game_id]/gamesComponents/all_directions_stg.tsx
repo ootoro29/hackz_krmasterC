@@ -144,7 +144,7 @@ export default function AllDirectionsSTG(){
                 */
                 if (Enemys[i].hit(player)) {
                     if(!game_over){
-                        const reward =  uinf.coins + Math.floor(score/5);
+                        const reward =  uinf.coins + Math.floor(score/1.5);
                         GAMEOVER(reward);
                     }
                     game_over = true;
@@ -170,7 +170,7 @@ export default function AllDirectionsSTG(){
                 p5.textSize(40);
                 p5.noStroke();
                 p5.fill(255,255,0);
-                p5.text("GameCoins +"+Math.floor(score/5),p5.width/2,p5.height/2+80);
+                p5.text("GameCoins +"+Math.floor(score/1.5),p5.width/2,p5.height/2+80);
             }
         }
         p5.draw = () => {

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { UserInfo } from "@/types/user";
 import { getDatabase, onValue, ref, update } from "firebase/database";
 
-export default function ObstacleGame(){
+export default function ObstacleGame({game_id}:{game_id:string}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -76,6 +76,7 @@ export default function ObstacleGame(){
                 p5.fill(0, 0, 255);
                 p5.noStroke();
                 p5.ellipse(this.x, this.y, this.r * 2);
+                p5.image(playerImage,this.x-this.r,this.y-this.r, this.r * 2, this.r * 2);
             }
         }
 
@@ -142,6 +143,7 @@ export default function ObstacleGame(){
         let obstacles:Obstacle[] = [];
         let score = 0;
         let time = 0;
+        let playerImage = p5.loadImage('../../image/test.png');
         let gameover = false;
         p5.setup = () => {
             p5.createCanvas(480, 600);
@@ -210,7 +212,7 @@ export default function ObstacleGame(){
                 obstacles[i].display();
                 if (obstacles[i].hits(player)) {
                     if(!gameover){
-                        const reward =  uinf.coins + Math.floor(score/3);
+                        const reward =  uinf.coins + Math.floor(score/1.5);
                         GAMEOVER(reward);
                     }
                     gameover = true;
@@ -231,7 +233,7 @@ export default function ObstacleGame(){
                 p5.fill(255,255,0);
                 p5.textSize(25);
                 p5.textAlign("center","center");
-                p5.text('GameCoins +'+Math.floor(score/3), p5.width / 2, p5.height / 2+35);
+                p5.text('GameCoins +'+Math.floor(score/1.5), p5.width / 2, p5.height / 2+35);
             }
             p5.textSize(24);
             p5.fill(0);
