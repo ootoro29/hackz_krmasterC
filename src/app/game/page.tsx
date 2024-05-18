@@ -179,8 +179,9 @@ export default function Game(){
                     p5.rect(p5.width/2-200,590,400*((click%10)/10.0),40);
                 }
                 p5.fill(255,255,0);
-                p5.textSize(35);
-                p5.text("ゲームコイン:"+GameCoins,0,40);
+                p5.textSize(45);
+                p5.noStroke();
+                p5.text("ゲームコイン:"+GameCoins,0,45);
             }else if(control == 1){
                 p5.strokeWeight(5);
                 p5.stroke(0);
