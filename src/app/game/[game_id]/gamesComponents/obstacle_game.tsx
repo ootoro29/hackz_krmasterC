@@ -57,7 +57,7 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                 this.x = p5.width / 2;
                 this.y = p5.height - 20;
                 this.vy = 0;
-                this.r = 20;
+                this.r = 40;
             }
             
             update() {
@@ -65,8 +65,8 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                 this.x = p5.constrain(this.x, this.r+40, p5.width - this.r-40);
                 this.y += this.vy;
                 this.vy += 0.3;
-                if(this.y >=  p5.height - 20){
-                    this.y =  p5.height - 20;
+                if(this.y >=  p5.height - this.r){
+                    this.y =  p5.height - this.r;
                     this.vy = 0;
                     count = 0;
                 }
@@ -76,7 +76,31 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                 p5.fill(0, 0, 255);
                 p5.noStroke();
                 p5.ellipse(this.x, this.y, this.r * 2);
-                p5.image(playerImage,this.x-this.r,this.y-this.r, this.r * 2, this.r * 2);
+                p5.translate(this.x-this.r-20,this.y-this.r-40);
+                if(p5.mouseX - preMX > 0){
+                    if(!gameover)direction = 1;
+                }
+                if(p5.mouseX - preMX < 0){
+                    if(!gameover)direction = -1;
+                }
+                if(direction == -1){
+                    p5.translate(120,0);
+                    p5.scale(-1,1);
+                }
+                if(player.vy == 0){
+                    p5.image(pM,0,0, 120, 120);
+                }else if(player.vy < 0){
+                    p5.image(pU,0,0, 120, 120);
+                }else{
+                    p5.image(pD,0,0, 120, 120);
+                }
+                if(direction == -1){
+                    p5.scale(-1,1);
+                    p5.translate(-120,0);
+                }
+                p5.translate(-this.x+this.r+20,-this.y+this.r+40);
+                preMX = p5.mouseX;
+
             }
         }
 
@@ -143,15 +167,20 @@ export default function ObstacleGame({game_id}:{game_id:string}){
         let obstacles:Obstacle[] = [];
         let score = 0;
         let time = 0;
-        let playerImage = p5.loadImage('../../image/test.png');
+        let playerImageM = p5.loadImage('../../image/test.png');
+        let pM = p5.loadImage('../../image/PM.png');
+        let pU = p5.loadImage('../../image/PU.png');
+        let pD = p5.loadImage('../../image/PD.png');
+        let direction = 1;
         let gameover = false;
         p5.setup = () => {
-            p5.createCanvas(480, 600);
+            p5.createCanvas(640, 800);
             player = new Player();
             p5.frameRate(60);
         }
         let count = 0;
         p5.mouseReleased = () => {
+            if(gameover)return;
             if(count ==  0){
                 player.vy += -10;
                 player.y += player.vy;
@@ -163,8 +192,7 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                 count ++;
             }
         }
-        
-
+        let preMX = 0;
         p5.draw = () => {
             //p5.background(220);
             p5.noStroke();
@@ -212,7 +240,7 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                 obstacles[i].display();
                 if (obstacles[i].hits(player)) {
                     if(!gameover){
-                        const reward =  uinf.coins + Math.floor(score/1.5);
+                        const reward =  uinf.coins + Math.floor(score*1.5);
                         GAMEOVER(reward);
                     }
                     gameover = true;
@@ -233,7 +261,7 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                 p5.fill(255,255,0);
                 p5.textSize(25);
                 p5.textAlign("center","center");
-                p5.text('GameCoins +'+Math.floor(score/1.5), p5.width / 2, p5.height / 2+35);
+                p5.text('GameCoins +'+Math.floor(score*1.5), p5.width / 2, p5.height / 2+35);
             }
             p5.textSize(24);
             p5.fill(0);

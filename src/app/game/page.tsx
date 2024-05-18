@@ -62,6 +62,13 @@ export default function Game(){
     ];
     const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
         if(!user || !uinf)return;
+        const INCGC = async(reward:number) => {
+            const db = getDatabase();
+            const userInfoRef = ref(db,`userInfo/${user.id}`);
+            await update(userInfoRef,{
+                coins:reward
+            });
+        }
 
         
         class Rectangle {
@@ -106,6 +113,7 @@ export default function Game(){
             const userGameRef = ref(db, `userGame/${result}`);
             await remove(userGameRef);
         };
+        let click = 0;
         p5.mouseReleased = async() => {
             if(button.onMouse()){
                 if(control == 0 && GameCoins >= 150){
@@ -115,6 +123,7 @@ export default function Game(){
                     Gy2 = 0;
                     Gy = 0;
                     GameKind = Math.floor(p5.random(0,ItemList.length));
+                    //GameKind = 0;
                     const db = getDatabase(); 
                     
                     const dbRef = ref(db, 'userGame');
@@ -130,6 +139,12 @@ export default function Game(){
                             coins:GameCoins
                         }).then((e) => {console.log(e);})
                     })
+                }else if(control == 0 && GameCoins < 150){
+                    click++;
+                    if(click % 10 == 0){
+                        INCGC(GameCoins+1);
+                        GameCoins += 1;
+                    }
                 }
             }
             if(back_button.onMouse()){
@@ -153,9 +168,20 @@ export default function Game(){
                 p5.textSize(70);
                 p5.fill(0);
                 p5.noStroke();
-                p5.text("ガチャる",button.x+(50),button.y+button.h-20);
-                p5.textSize(35);
-                p5.text("ゲームコイン:"+GameCoins,0,40);
+                if(GameCoins >= 150)p5.text("ガチャる",button.x+(50),button.y+button.h-20);
+                else {
+                    p5.text("救済措置",button.x+(50),button.y+button.h-20);
+                    p5.stroke(0);
+                    p5.strokeWeight(4);
+                    p5.fill(200);
+                    p5.rect(p5.width/2-200,590,400,40);
+                    p5.fill(0,255,90);
+                    p5.rect(p5.width/2-200,590,400*((click%10)/10.0),40);
+                }
+                p5.fill(255,255,0);
+                p5.textSize(45);
+                p5.noStroke();
+                p5.text("ゲームコイン:"+GameCoins,0,45);
             }else if(control == 1){
                 p5.strokeWeight(5);
                 p5.stroke(0);
