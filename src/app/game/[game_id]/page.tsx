@@ -70,7 +70,7 @@ export default function Game({params}:{params:{game_id:string}}){
             <div>
                 {
                     (Game == 0)&&
-                    <ObstacleGame/>
+                    <ObstacleGame game_id = {params.game_id} />
                 }
                 {
                     (Game == 1)&&

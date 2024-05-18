@@ -93,6 +93,7 @@ export default function Game(){
         let rotate = 0;
         let GameKind = 0;
         let result = "";
+        let testImage = p5.loadImage("./image/test.png");
         p5.setup = async() => {
             result = uinf.game;
             GameCoins = uinf.coins;
@@ -137,6 +138,7 @@ export default function Game(){
         };
         p5.draw = () => {
             p5.background(255,200,200);
+            //p5.image(testImage,0,0);
             if(control == 0){
                 p5.strokeWeight(5);
                 p5.stroke(0);
