@@ -12,6 +12,8 @@ import TestGame4 from "./gamesComponents/test_game4";
 import TestGame5 from "./gamesComponents/test_game5";
 import ObstacleGame from "./gamesComponents/obstacle_game";
 import AllDirectionsSTG from "./gamesComponents/all_directions_stg";
+import FourOpeGame from "./gamesComponents/four_operator";
+import SakeCheese from "./gamesComponents/sake_cheese";
 
 export default function Game({params}:{params:{game_id:string}}){
     const user = useAuth();
@@ -78,11 +80,11 @@ export default function Game({params}:{params:{game_id:string}}){
                 }
                 {
                     (Game == 2)&&
-                    <TestGame3/>
+                    <FourOpeGame/>
                 }
                 {
                     (Game == 3)&&
-                    <TestGame4/>
+                    <SakeCheese/>
                 }
                 {
                     (Game == 4)&&

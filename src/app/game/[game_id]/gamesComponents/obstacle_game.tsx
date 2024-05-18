@@ -248,6 +248,7 @@ export default function ObstacleGame({game_id}:{game_id:string}){
             <div style={{display:"flex",justifyContent:"center",alignItems:"center",flexDirection:"column"}}>
                 <p>ゲーム画面</p>
                 <SketchComponent sketch={sketch}></SketchComponent>
+                <button onClick={() => {router.push('/game')}}>ゲームを終わる</button>
             </div>
         );
     }
