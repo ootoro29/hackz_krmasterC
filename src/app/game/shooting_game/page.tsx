@@ -4,23 +4,56 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { UserInfo } from "@/types/user";
+import { getDatabase, onValue, ref, update } from "firebase/database";
 
 export default function Game(){
     const user = useAuth();
     const router = useRouter();
+    const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
+    const handleSetUserInfo = async() => {
+        if(!user)return;
+        const db = getDatabase();
+        const userInfoRef = ref(db,`userInfo/${user.id}`);
+        await onValue(userInfoRef,(snap) => {
+            if(!snap.val()){
+                setUinf(null);
+            }else{
+                setUinf({game:snap.val().game,coins:snap.val().coins});
+            }
+        },{onlyOnce:true})
+    }
     useEffect(() => {
         if(user === null){
             router.push('/');
         }
+        if(!user)return;
+        handleSetUserInfo();
+        
     },[user]);
+    useEffect(() => {
+        if(!user)return;
+        if(uinf === null){
+            router.push('/game');
+        }
+    },[uinf])
     
     const sketch = (p5: P5CanvasInstance) => {
+        if(!user || !uinf)return;
         let ship:Ship;
         let bullets:Bullet[] = [];
         let enemies:Enemy[] = [];
         let score = 0;
-
+        let gameover = false;
+        const GAMEOVER = async(reward:number) => {
+            alert(reward);
+            const db = getDatabase();
+            const userInfoRef = ref(db,`userInfo/${user.id}`);
+            await update(userInfoRef,{
+                coins:reward
+            });
+        }
         p5.setup = () => {
             p5.createCanvas(400, 600);
             ship = new Ship();
@@ -28,15 +61,14 @@ export default function Game(){
                 enemies.push(new Enemy(i * 60 + 60, 40));
             }
         }
-
         p5.draw = () => {
             p5.background(0);
             
-            ship.update();
+            if(!gameover)ship.update();
             ship.display();
             
             for (let i = bullets.length - 1; i >= 0; i--) {
-                bullets[i].update();
+                if(!gameover)bullets[i].update();
                 bullets[i].display();
                 if (bullets[i].offscreen()) {
                     bullets.splice(i, 1);
@@ -51,12 +83,17 @@ export default function Game(){
                     }
                 }
             }
-            
+            p5.text(gameover,0,50);
             for (let i = enemies.length - 1; i >= 0; i--) {
-                enemies[i].update();
+                if(!gameover)enemies[i].update();
                 enemies[i].display();
                 if (enemies[i].hits(ship)) {
-                    p5.noLoop();
+                    if(!gameover){
+                        alert('its over');
+                        const reward =  uinf.coins + score * 5;
+                        GAMEOVER(reward);
+                    }
+                    gameover = true;
                     p5.textSize(32);
                     p5.fill(255);
                     p5.textAlign("center","center");

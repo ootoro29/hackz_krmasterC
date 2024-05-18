@@ -4,23 +4,64 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { get, getDatabase, push, ref, remove, serverTimestamp, set } from "firebase/database";
+import { use, useEffect, useState } from "react";
+import { UserInfo } from "@/types/user";
+import { get, getDatabase, onValue, push, ref, remove, serverTimestamp, set, update } from "firebase/database";
+import { Item } from "@/types/item";
 
 export default function Game(){
     const user = useAuth();
     const router = useRouter();
+    const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
+    const handleCreateInitUserInfo = async() => {
+        if(!user)return;
+        const db = getDatabase();
+        const userInfoRef = ref(db,`userInfo/${user.id}`);
+        await set(userInfoRef,{
+            game:"",
+            coins:1000,
+        }).then((inf) => {
+            setUinf({game:"",coins:1000});
+        });
+    }
+    const handleSetUserInfo = async() => {
+        if(!user)return;
+        const db = getDatabase();
+        const userInfoRef = ref(db,`userInfo/${user.id}`);
+        await onValue(userInfoRef,(snap) => {
+            if(!snap.val()){
+                setUinf(null);
+            }else{
+                setUinf({game:snap.val().game,coins:snap.val().coins});
+            }
+        },{onlyOnce:true})
+    }
     useEffect(() => {
         if(user === null){
             router.push('/');
         }
+        if(!user)return;
+        handleSetUserInfo();
+        
     },[user]);
+    useEffect(() => {
+        if(!user)return;
+        if(uinf === null){
+            handleCreateInitUserInfo();
+        }
+    },[uinf])
 
     const handleButton = () => {
         router.push("/hogehoge");
     }
-    const sketch = (p5: P5CanvasInstance) => {
-        if(!user)return;
+    const ItemList:Item[] = [
+        {name:"ジャンピング\n回避ゲーム"},
+        {name:"全方位STG"}
+    ];
+    const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
+        if(!user || !uinf)return;
+
+        
         class Rectangle {
             // クラスの型宣言
             x: number
@@ -52,11 +93,16 @@ export default function Game(){
         let rotate = 0;
         let GameKind = 0;
         let result = "";
-        p5.setup = () => {
-            GameCoins = 1000;
+        let testImage = p5.loadImage("./image/test.png");
+        p5.setup = async() => {
+            result = uinf.game;
+            GameCoins = uinf.coins;
             p5.createCanvas(1200, 720);
             button =  new Rectangle(p5.width/2-200,500,400,90);
             back_button = new Rectangle(p5.width/2-240,600,480,80);
+            const db = getDatabase(); 
+            const userGameRef = ref(db, `userGame/${result}`);
+            await remove(userGameRef);
         };
         p5.mouseReleased = async() => {
             if(button.onMouse()){
@@ -66,14 +112,9 @@ export default function Game(){
                     Time[0] = 0;
                     Gy2 = 0;
                     Gy = 0;
-                    GameKind = Math.floor(p5.random(0,5));
+                    GameKind = Math.floor(p5.random(0,ItemList.length));
                     const db = getDatabase(); 
-                    const userdeleteInfo = ref(db, `userInfo/${user.id}`);
-                    await get(userdeleteInfo).then(async(info) => {
-                        if(!info.val())return;
-                        const userGameRef = ref(db, `userGame/${info.val().game}`);
-                        await remove(userGameRef);
-                    })
+                    
                     const dbRef = ref(db, 'userGame');
                     await push(dbRef, {
                         user:user.id,
@@ -82,10 +123,10 @@ export default function Game(){
                         if(!gameInfo.key)return;
                         result = gameInfo.key;
                         const userInfo = ref(db, `userInfo/${user.id}`);
-                        await set(userInfo,{
-                            exit:true,
-                            game:result  
-                        })
+                        await update(userInfo,{
+                            game:result,
+                            coins:GameCoins
+                        }).then((e) => {console.log(e);})
                     })
                 }
             }
@@ -97,6 +138,7 @@ export default function Game(){
         };
         p5.draw = () => {
             p5.background(255,200,200);
+            //p5.image(testImage,0,0);
             if(control == 0){
                 p5.strokeWeight(5);
                 p5.stroke(0);
@@ -150,7 +192,7 @@ export default function Game(){
                 p5.textSize(200);
                 p5.fill(0);
                 p5.textAlign("center");
-                p5.text(GameKind,p5.width/2,300);
+                p5.text(ItemList[GameKind].name,p5.width/2,300);
                 p5.textAlign("left");
                 if(Time[2] < 0){
                     p5.fill(255,255,255,255-(25+Time[2])*8);

@@ -10,6 +10,8 @@ import TestGame2 from "./gamesComponents/test_game2";
 import TestGame3 from "./gamesComponents/test_game3";
 import TestGame4 from "./gamesComponents/test_game4";
 import TestGame5 from "./gamesComponents/test_game5";
+import ObstacleGame from "./gamesComponents/obstacle_game";
+import AllDirectionsSTG from "./gamesComponents/all_directions_stg";
 
 export default function Game({params}:{params:{game_id:string}}){
     const user = useAuth();
@@ -65,15 +67,14 @@ export default function Game({params}:{params:{game_id:string}}){
 
         };
         return(        
-            <div style={{display:"flex",justifyContent:"center",alignItems:"center",flexDirection:"column"}}>
-                <p>ゲーム画面</p>
+            <div>
                 {
                     (Game == 0)&&
-                    <TestGame1/>
+                    <ObstacleGame game_id = {params.game_id} />
                 }
                 {
                     (Game == 1)&&
-                    <TestGame2/>
+                    <AllDirectionsSTG/>
                 }
                 {
                     (Game == 2)&&
