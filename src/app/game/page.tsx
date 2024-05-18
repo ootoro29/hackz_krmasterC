@@ -56,7 +56,9 @@ export default function Game(){
     }
     const ItemList:Item[] = [
         {name:"ジャンピング\n回避ゲーム"},
-        {name:"全方位STG"}
+        {name:"全方位STG"},
+        {name:"四則演算\nゲーム"},
+        {name:"避ける\nチーズ"},
     ];
     const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
         if(!user || !uinf)return;

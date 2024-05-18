@@ -386,6 +386,7 @@ export default function AllDirectionsSTG(){
             <div style={{display:"flex",justifyContent:"center",alignItems:"center",flexDirection:"column"}}>
                 <p>ゲーム画面</p>
                 <SketchComponent sketch={sketch}></SketchComponent>
+                <button onClick={() => {router.push('/game')}}>ゲームを終わる</button>
             </div>
         );
     }
