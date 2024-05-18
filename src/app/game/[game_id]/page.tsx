@@ -10,6 +10,7 @@ import TestGame2 from "./gamesComponents/test_game2";
 import TestGame3 from "./gamesComponents/test_game3";
 import TestGame4 from "./gamesComponents/test_game4";
 import TestGame5 from "./gamesComponents/test_game5";
+import ObstacleGame from "./gamesComponents/obstacle_game";
 
 export default function Game({params}:{params:{game_id:string}}){
     const user = useAuth();
@@ -69,7 +70,7 @@ export default function Game({params}:{params:{game_id:string}}){
                 <p>ゲーム画面</p>
                 {
                     (Game == 0)&&
-                    <TestGame1/>
+                    <ObstacleGame/>
                 }
                 {
                     (Game == 1)&&

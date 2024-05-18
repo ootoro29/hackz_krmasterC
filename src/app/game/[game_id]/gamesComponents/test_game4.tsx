@@ -47,7 +47,6 @@ export default function TestGame4(){
         let score = 0;
         let gameover = false;
         const GAMEOVER = async(reward:number) => {
-            alert(reward);
             const db = getDatabase();
             const userInfoRef = ref(db,`userInfo/${user.id}`);
             await update(userInfoRef,{
