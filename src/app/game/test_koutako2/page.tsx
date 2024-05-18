@@ -44,11 +44,11 @@ export default function Game(){
             }
         }
         class Wall{
-            effect:[string,number];
+            effect:["+"|"-"|"×"|"÷",number];
             whitch:string;
             h:number;
             y:number;
-            constructor(effect:[string,number],whitch:string){
+            constructor(effect:["+"|"-"|"×"|"÷",number],whitch:string){
                 this.effect=effect;
                 this.whitch=whitch;
                 this.h=100;
@@ -96,7 +96,7 @@ export default function Game(){
         const MINUS="-";
         const MULTIPLY="×";
         const DIVIDE="÷";
-        const EFFECT_TYPES=[PLUS,MINUS,MULTIPLY,DIVIDE];
+        const EFFECT_TYPES:("+"|"-"|"×"|"÷")[]=[PLUS,MINUS,MULTIPLY,DIVIDE];
         const COLOR_BY_EFFECT={"+":[255,255,0],
                                "-":[0,255,255],
                                "×":[255,0,0],
