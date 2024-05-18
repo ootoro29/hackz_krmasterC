@@ -210,7 +210,7 @@ export default function ObstacleGame(){
                 obstacles[i].display();
                 if (obstacles[i].hits(player)) {
                     if(!gameover){
-                        const reward =  uinf.coins + Math.floor(score/3);
+                        const reward =  uinf.coins + Math.floor(score/1.5);
                         GAMEOVER(reward);
                     }
                     gameover = true;
@@ -231,7 +231,7 @@ export default function ObstacleGame(){
                 p5.fill(255,255,0);
                 p5.textSize(25);
                 p5.textAlign("center","center");
-                p5.text('GameCoins +'+Math.floor(score/3), p5.width / 2, p5.height / 2+35);
+                p5.text('GameCoins +'+Math.floor(score/1.5), p5.width / 2, p5.height / 2+35);
             }
             p5.textSize(24);
             p5.fill(0);
