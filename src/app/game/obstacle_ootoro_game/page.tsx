@@ -25,7 +25,7 @@ export default function Game(){
                 this.x = p5.width / 2;
                 this.y = p5.height - 20;
                 this.vy = 0;
-                this.r = 20;
+                this.r = 25;
             }
             
             update() {
@@ -33,8 +33,8 @@ export default function Game(){
                 this.x = p5.constrain(this.x, this.r+40, p5.width - this.r-40);
                 this.y += this.vy;
                 this.vy += 0.3;
-                if(this.y >=  p5.height - 20){
-                    this.y =  p5.height - 20;
+                if(this.y >=  p5.height - 30){
+                    this.y =  p5.height - 30;
                     this.vy = 0;
                     count = 0;
                 }
