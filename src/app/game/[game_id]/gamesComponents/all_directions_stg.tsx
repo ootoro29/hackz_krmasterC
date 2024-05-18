@@ -108,7 +108,7 @@ export default function AllDirectionsSTG(){
         let pre_theta = 0;
         const game = () => {
             if(!game_over)score += 0.001;
-            let T = 400 -240*(1+(1+Math.exp(-gameTime/3000 - 1)));
+            let T = 400 -240*(1+(1+Math.exp(-gameTime/5000 - 1)));
             T = Math.floor(T);
             if(p5.frameCount % T == 0){
                 if(!game_over)Enemys.push(new Enemy(Math.min(3+Math.floor(gameTime/1200),7),-2+10*(1+(1+Math.exp(-gameTime/1000)))));
