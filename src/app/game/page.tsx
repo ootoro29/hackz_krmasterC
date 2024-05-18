@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { UserInfo } from "@/types/user";
 import { get, getDatabase, onValue, push, ref, remove, serverTimestamp, set, update } from "firebase/database";
+import { Item } from "@/types/item";
 
 export default function Game(){
     const user = useAuth();
@@ -53,6 +54,10 @@ export default function Game(){
     const handleButton = () => {
         router.push("/hogehoge");
     }
+    const ItemList:Item[] = [
+        {name:"ジャンピング\n回避ゲーム"},
+        {name:"全方位STG"}
+    ];
     const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
         if(!user || !uinf)return;
 
@@ -106,7 +111,7 @@ export default function Game(){
                     Time[0] = 0;
                     Gy2 = 0;
                     Gy = 0;
-                    GameKind = Math.floor(p5.random(0,5));
+                    GameKind = Math.floor(p5.random(0,ItemList.length));
                     const db = getDatabase(); 
                     
                     const dbRef = ref(db, 'userGame');
@@ -185,7 +190,7 @@ export default function Game(){
                 p5.textSize(200);
                 p5.fill(0);
                 p5.textAlign("center");
-                p5.text(GameKind,p5.width/2,300);
+                p5.text(ItemList[GameKind].name,p5.width/2,300);
                 p5.textAlign("left");
                 if(Time[2] < 0){
                     p5.fill(255,255,255,255-(25+Time[2])*8);
