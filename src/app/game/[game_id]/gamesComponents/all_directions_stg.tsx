@@ -4,11 +4,11 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { UserInfo, UserScoreInfo } from "@/types/user";
 import { getDatabase, limitToFirst, onChildAdded, onValue, orderByChild, query, ref, update } from "firebase/database";
 
-export default function AllDirectionsSTG({kind}:{kind:number}){
+export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,scoreInfo,setScoreInfo}:{kind:number,scoreUserInfo:UserScoreInfo|null,setScoreUserInfo:Dispatch<SetStateAction<UserScoreInfo|null>>,scoreInfo:Array<UserScoreInfo>,setScoreInfo:Dispatch<SetStateAction<Array<UserScoreInfo>>>}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -39,40 +39,7 @@ export default function AllDirectionsSTG({kind}:{kind:number}){
         }
     },[uinf])
 
-    const [scoreInfo,setScoreInfo] = useState<UserScoreInfo[]>([]);
-    const [scoreUserInfo,setScoreUserInfo] = useState<UserScoreInfo|null>(null);
-    useEffect(() => {
-        if(!user)return;
-        const db = getDatabase();
-        const gameScoreRef = query(ref(db,`gameScore/${kind}/`), limitToFirst(100),orderByChild('/score'))
-        
-        return onChildAdded(gameScoreRef,(snap) => {
-            if(!snap.val() || !snap.key)return;
-            const uid:string = snap.key;
-            
-            const orderFunc = (a:UserScoreInfo,b:UserScoreInfo) => {
-                if(a.score > b.score){
-                    return -1;
-                }
-                if(a.score < b.score){
-                    return 1;
-                }
-                return 0;
-            }
-            
-            setScoreInfo((prev) => {
-                const findex = prev.findIndex((v) => v.UID == uid);
-                if(findex == -1){
-                    return [...prev,{gameKind:kind,UID:uid,name:null,score:snap.val().score}].sort(orderFunc)
-                }else{
-                    return [...prev.slice(0,findex),{gameKind:kind,UID:uid,name:null,score:snap.val().score},...prev.slice(findex+1,prev.length)].sort(orderFunc)
-                }
-            })
-        });
-    },[user])
-    useEffect(() => {
-        console.log(scoreInfo);
-    },[scoreInfo])
+    
     useEffect(() => {
         if(!user)return;
         const db = getDatabase();
