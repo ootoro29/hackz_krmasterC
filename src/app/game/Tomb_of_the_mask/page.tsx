@@ -5,35 +5,46 @@ import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { promises as fs } from "promises";
-import type { NextApiRequest, NextApiResponse } from "next"
+import { useState } from "react"
 
-type ResponseData = {
-    StateMat: number[]
+type StageData = {
+    StateMat: number[];
 }
 
-export async function handler(
-    idx: number,
-) {
-    const data = await fs.readFile("/ToM_Stages/Stage" + String(idx) + ".json");
-    console.log(data);
-    return data.toJSON();
-}
-
+const JSON_PATH = "Stage";
 
 
 export default function Game() {
     const user = useAuth();
     const router = useRouter();
+    const [data1, setData1] = useState<StageData>();
+    const [data2, setData2] = useState<StageData>();
+    const [data3, setData3] = useState<StageData>();
     useEffect(() => {
         if (user === null) {
             router.push('/');
         }
     }, [user]);
 
+    useEffect(() => {
+        fetch(`${"/ToM_Stages/" + JSON_PATH + String(1) + ".json"}`, { method: "GET" })
+            .then(res => res.json())
+            .then(data1 => { setData1(data1) })
+    }, []);
+    useEffect(() => {
+        fetch(`${"/ToM_Stages/" + JSON_PATH + String(2) + ".json"}`, { method: "GET" })
+            .then(res => res.json())
+            .then(data2 => { setData2(data2) })
+    }, []);
+    useEffect(() => {
+        fetch(`${"/ToM_Stages/" + JSON_PATH + String(3) + ".json"}`, { method: "GET" })
+            .then(res => res.json())
+            .then(data3 => { setData3(data3) })
+    }, []);
+
     const sketch = (p5: P5CanvasInstance) => {
         let ROW = 30;
-        let COL = 21;
+        let COL = 30;
         let SqSize = 50;
         let bIsInTransition = false;
         let Dist = 0;
@@ -41,7 +52,9 @@ export default function Game() {
         let EditMode = true;
         let bIsPlayerStartSet = false;
         let bIsExitSet = false;
+        let StatePaintId = 1;
         let GameEnd = false;
+        let StartMillisec = 0;
         const FontSize = 20;
 
         class Field {
@@ -184,18 +197,31 @@ export default function Game() {
             SaveStage() {
                 if (EditMode == true) {
                     let StageObj = {};
-                    p5.saveJSON(StageObj, "assets/stages/stage.json");
+                    StageObj.StateMat = this.State;
+                    p5.saveJSON(StageObj, "../../ToM_Stages/Stage0.json");
                 }
             }
 
             LoadStage() {
                 if (EditMode == true) {
-                    let StageObj = {};
-                    StageObj = handler(0);
-                    this.row = this.State.length;
-                    this.col = this.State[0].length;
+                    let data = [data1, data2, data3];
+                    let idx = Math.floor(Math.random() * 3) % 3 + 1;
+                    this.State = data[idx].StateMat;
                 }
             }
+
+            SetStart() {
+                for (let i = 0; i < this.GetSize().y; ++i) {
+                    for (let j = 0; j < this.GetSize().x; ++j) {
+                        if (this.GetState(j, i) == 3) {
+                            Pl.x = j;
+                            Pl.y = i;
+                            break;
+                        }
+                    }
+                }
+            }
+ 
 
             SetState(xIdx:number, yIdx:number, state:number) {
                 this.State[yIdx][xIdx] = state;
@@ -243,7 +269,7 @@ export default function Game() {
                 p5.triangle(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y);
                 p5.pop();
             }
-        }
+       }
 
         let Fd : Field;
         let Pl : Player;
@@ -261,6 +287,7 @@ export default function Game() {
             p5.textSize(FontSize);
             p5.textAlign(p5.RIGHT, p5.CENTER);
             p5.rectMode(p5.CENTER);
+            Pl = new Player(1, 1, 0, Fd);
         }
 
         p5.draw = () => {
@@ -323,6 +350,10 @@ export default function Game() {
                 p5.noStroke();
                 p5.fill(255);
                 p5.text(p5.str(Score), ScoreX, ScoreY);
+
+                if ((p5.millis() - StartMillisec) % 10 <= 0.7 && Score > 0 && !bIsInTransition) {
+                    --Score;
+                }
             }
             else // Game has finished
             {
@@ -340,15 +371,23 @@ export default function Game() {
                     let dir = -1;
                     if (p5.key == 'w' || p5.key == 'W') {
                         dir = 3;
+                        --Score;
                     }
                     else if (p5.key == 's' || p5.key == 'S') {
                         dir = 1;
+                        --Score;
                     }
                     else if (p5.key == 'a' || p5.key == 'A') {
                         dir = 2;
+                        --Score;
                     }
                     else if (p5.key == 'd' || p5.key == 'D') {
                         dir = 0;
+                        --Score;
+                    }
+
+                    if (Score < 0) {
+                        Score = 0;
                     }
 
                     Dist = Fd.TraceField(dir, Pl.x, Pl.y);
@@ -360,9 +399,10 @@ export default function Game() {
                         Pl.Direction = (dir + 2) % 4;
                     }
                 }
-                else
-                {
+                else {
                     if (p5.keyCode == p5.ENTER && bIsExitSet && bIsPlayerStartSet) {
+                        Fd.SetStart();
+                        StartMillisec = p5.millis();
                         EditMode = false;
                     }
                     else if ((p5.key == 's' || p5.key == 'S')
@@ -383,10 +423,12 @@ export default function Game() {
                 return;
             }
 
+            let Idx_X = p5.floor(p5.mouseX / Fd.GetEditSqSize());
+            let Idx_Y = p5.floor(p5.mouseY / Fd.GetEditSqSize());
+
             if (p5.mouseButton == p5.LEFT) {
-                let Idx_X = p5.floor(p5.mouseX / Fd.GetEditSqSize());
-                let Idx_Y = p5.floor(p5.mouseY / Fd.GetEditSqSize());
                 Fd.SetState(Idx_X, Idx_Y, -Fd.GetState(Idx_X, Idx_Y));
+                StatePaintId = Fd.GetState(Idx_X, Idx_Y);
 
                 if (Idx_X <= 0 || Idx_X >= Fd.GetSize().x - 1
                     || Idx_Y <= 0 || Idx_Y >= Fd.GetSize().y - 1) {
@@ -396,8 +438,6 @@ export default function Game() {
                 }
             }
             else if (p5.mouseButton == p5.RIGHT) {
-                let Idx_X = p5.floor(p5.mouseX / Fd.GetEditSqSize());
-                let Idx_Y = p5.floor(p5.mouseY / Fd.GetEditSqSize());
                 if (Fd.GetState(Idx_X, Idx_Y) != -1 && !bIsPlayerStartSet) {
                     Pl = new Player(Idx_X, Idx_Y, 0, Fd);
                     bIsPlayerStartSet = true;
@@ -408,6 +448,26 @@ export default function Game() {
                     Pl.x = Idx_X;
                     Pl.y = Idx_Y;
                     Fd.SetState(Idx_X, Idx_Y, 3);
+                }
+            }
+            else if (p5.mouseButton == p5.CENTER) {
+            }
+        }
+
+        p5.mouseDragged = () => {
+            if (EditMode && p5.mouseIsPressed) {
+                let Idx_X = Math.floor(p5.mouseX / Fd.EditSqSize);
+                let Idx_Y = Math.floor(p5.mouseY / Fd.EditSqSize);
+
+                if (Idx_X <= 0 || Idx_X >= Fd.GetSize().x - 1
+                    || Idx_Y <= 0 || Idx_Y >= Fd.GetSize().y - 1) {
+                    Fd.BlockFrame();
+                    Fd.SetState(Idx_X, Idx_Y, 4); // stage exit
+                    bIsExitSet = true;
+                }
+
+                if (Fd.GetState(Idx_X, Idx_Y) >= -1 && Fd.GetState(Idx_X, Idx_Y) <= 1) {
+                    Fd.SetState(Idx_X, Idx_Y, StatePaintId);
                 }
             }
         }
