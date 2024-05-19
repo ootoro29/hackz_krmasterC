@@ -5,10 +5,10 @@ import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { UserInfo } from "@/types/user";
-import { getDatabase, onValue, ref, update } from "firebase/database";
+import { UserInfo, UserScoreInfo } from "@/types/user";
+import { getDatabase, limitToFirst, onChildAdded, onValue, orderByChild, query, ref, update } from "firebase/database";
 
-export default function ObstacleGame({game_id}:{game_id:string}){
+export default function ObstacleGame({kind}:{kind:number}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -38,6 +38,51 @@ export default function ObstacleGame({game_id}:{game_id:string}){
             router.push('/game');
         }
     },[uinf])
+
+    const [scoreInfo,setScoreInfo] = useState<UserScoreInfo[]>([]);
+    const [scoreUserInfo,setScoreUserInfo] = useState<UserScoreInfo|null>(null);
+    useEffect(() => {
+        if(!user)return;
+        const db = getDatabase();
+        const gameScoreRef = query(ref(db,`gameScore/${kind}/`), limitToFirst(100),orderByChild('/score'))
+        
+        return onChildAdded(gameScoreRef,(snap) => {
+            if(!snap.val() || !snap.key)return;
+            const uid:string = snap.key;
+            
+            const orderFunc = (a:UserScoreInfo,b:UserScoreInfo) => {
+                if(a.score > b.score){
+                    return -1;
+                }
+                if(a.score < b.score){
+                    return 1;
+                }
+                return 0;
+            }
+            
+            setScoreInfo((prev) => {
+                const findex = prev.findIndex((v) => v.UID == uid);
+                if(findex == -1){
+                    return [...prev,{gameKind:kind,UID:uid,name:null,score:snap.val().score}].sort(orderFunc)
+                }else{
+                    return [...prev.slice(0,findex),{gameKind:kind,UID:uid,name:null,score:snap.val().score},...prev.slice(findex+1,prev.length)].sort(orderFunc)
+                }
+            })
+        });
+    },[user])
+    useEffect(() => {
+        console.log(scoreInfo);
+    },[scoreInfo])
+    useEffect(() => {
+        if(!user)return;
+        const db = getDatabase();
+        const gameUserScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+        return onValue(gameUserScoreRef,(snap) => {
+            if(!snap.val() || !snap.key){return;}
+            const uid:string = snap.key;
+            setScoreUserInfo({gameKind:kind,UID:uid,name:null,score:snap.val().score});
+        },{onlyOnce:true})
+    },[user])
     
     const sketch = (p5: P5CanvasInstance) => {
         if(!user || !uinf)return;
@@ -47,6 +92,24 @@ export default function ObstacleGame({game_id}:{game_id:string}){
             await update(userInfoRef,{
                 coins:reward
             });
+        }
+        const SCOREBOARD = async(score:number) => {
+            const db = getDatabase();
+            const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+            const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
+            const UPDATE = () => {
+                update(gameScoreRef,{
+                    score:score
+                });
+            }
+            if( scoreUserInfo === null ){
+                await UPDATE();
+            }else{
+                if(scoreUserInfo.score < score){
+                    await UPDATE();
+                }
+            }
+            
         }
         class Player {
             x:number;
@@ -242,6 +305,7 @@ export default function ObstacleGame({game_id}:{game_id:string}){
                     if(!gameover){
                         const reward =  uinf.coins + Math.floor(score*1.5);
                         GAMEOVER(reward);
+                        SCOREBOARD(score);
                     }
                     gameover = true;
                 }

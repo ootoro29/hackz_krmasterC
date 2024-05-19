@@ -72,19 +72,19 @@ export default function Game({params}:{params:{game_id:string}}){
             <div>
                 {
                     (Game == 0)&&
-                    <ObstacleGame game_id = {params.game_id} />
+                    <ObstacleGame kind = {Game} />
                 }
                 {
                     (Game == 1)&&
-                    <AllDirectionsSTG/>
+                    <AllDirectionsSTG kind = {Game}/>
                 }
                 {
                     (Game == 2)&&
-                    <FourOpeGame/>
+                    <FourOpeGame kind = {Game}/>
                 }
                 {
                     (Game == 3)&&
-                    <SakeCheese/>
+                    <SakeCheese kind = {Game}/>
                 }
                 {
                     (Game == 4)&&

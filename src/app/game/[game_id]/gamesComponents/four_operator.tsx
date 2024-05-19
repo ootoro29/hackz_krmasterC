@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getEdgePolyfilledModules } from "next/dist/build/webpack/plugins/middleware-plugin";
 import { log } from "console";
-import { UserInfo } from "@/types/user";
-import { getDatabase, onValue, ref, update } from "firebase/database";
+import { UserInfo, UserScoreInfo } from "@/types/user";
+import { get, getDatabase, limitToFirst, limitToLast, onChildAdded, onValue, orderByChild, query, ref, update } from "firebase/database";
 
 
-export default function FourOpeGame(){
+export default function FourOpeGame({kind}:{kind:number}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -41,6 +41,50 @@ export default function FourOpeGame(){
             router.push('/game');
         }
     },[uinf])
+    const [scoreInfo,setScoreInfo] = useState<UserScoreInfo[]>([]);
+    const [scoreUserInfo,setScoreUserInfo] = useState<UserScoreInfo|null>(null);
+    useEffect(() => {
+        if(!user)return;
+        const db = getDatabase();
+        const gameScoreRef = query(ref(db,`gameScore/${kind}/`), limitToFirst(100),orderByChild('/score'))
+        
+        return onChildAdded(gameScoreRef,(snap) => {
+            if(!snap.val() || !snap.key)return;
+            const uid:string = snap.key;
+            
+            const orderFunc = (a:UserScoreInfo,b:UserScoreInfo) => {
+                if(a.score > b.score){
+                    return -1;
+                }
+                if(a.score < b.score){
+                    return 1;
+                }
+                return 0;
+            }
+            
+            setScoreInfo((prev) => {
+                const findex = prev.findIndex((v) => v.UID == uid);
+                if(findex == -1){
+                    return [...prev,{gameKind:kind,UID:uid,name:null,score:snap.val().score}].sort(orderFunc)
+                }else{
+                    return [...prev.slice(0,findex),{gameKind:kind,UID:uid,name:null,score:snap.val().score},...prev.slice(findex+1,prev.length)].sort(orderFunc)
+                }
+            })
+        });
+    },[user])
+    useEffect(() => {
+        console.log(scoreInfo);
+    },[scoreInfo])
+    useEffect(() => {
+        if(!user)return;
+        const db = getDatabase();
+        const gameUserScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+        return onValue(gameUserScoreRef,(snap) => {
+            if(!snap.val() || !snap.key){return;}
+            const uid:string = snap.key;
+            setScoreUserInfo({gameKind:kind,UID:uid,name:null,score:snap.val().score});
+        },{onlyOnce:true})
+    },[user])
 
     const sketch = (p5: P5CanvasInstance) => {
         //ootoro 変更点
@@ -53,6 +97,35 @@ export default function FourOpeGame(){
             await update(userInfoRef,{
                 coins:reward
             });
+        }
+        const SCOREBOARD = async(score:number) => {
+            const db = getDatabase();
+            const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+            const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
+            const UPDATE = async() => {
+                await update(gameScoreRef,{
+                    score:score
+                });
+            }
+            if( scoreUserInfo === null ){
+                UPDATE();
+            }else{
+                if(scoreUserInfo.score < score){
+                    if(findex!=-1){
+                        scoreInfo.sort((a:UserScoreInfo,b:UserScoreInfo) => {
+                            if(a.score > b.score){
+                                return -1;
+                            }
+                            if(a.score < b.score){
+                                return 1;
+                            }
+                            return 0;
+                        });
+                    }
+                    UPDATE();
+                }
+            }
+            
         }
         //
 
@@ -243,6 +316,7 @@ export default function FourOpeGame(){
             if(!game_over){
                 const reward =  uinf.coins + Math.floor(score/10);
                 GAMEOVER(reward);
+                SCOREBOARD(score);
             }
             game_over = true;
             // drawing
