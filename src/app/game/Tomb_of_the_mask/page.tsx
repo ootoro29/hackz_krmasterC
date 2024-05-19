@@ -5,6 +5,22 @@ import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { promises as fs } from "promises";
+import type { NextApiRequest, NextApiResponse } from "next"
+
+type ResponseData = {
+    StateMat: number[]
+}
+
+export async function handler(
+    idx: number,
+) {
+    const data = await fs.readFile("/ToM_Stages/Stage" + String(idx) + ".json");
+    console.log(data);
+    return data.toJSON();
+}
+
+
 
 export default function Game() {
     const user = useAuth();
@@ -175,7 +191,7 @@ export default function Game() {
             LoadStage() {
                 if (EditMode == true) {
                     let StageObj = {};
-                    StageObj = p5.loadJSON("assets/stages/stage.json");
+                    StageObj = handler(0);
                     this.row = this.State.length;
                     this.col = this.State[0].length;
                 }
