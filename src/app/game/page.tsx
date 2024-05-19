@@ -143,7 +143,7 @@ export default function Game(){
                     })
                 }else if(control == 0 && GameCoins < 150){
                     click++;
-                    if(click % 10 == 0){
+                    if(click % 5 == 0){
                         INCGC(GameCoins+1);
                         GameCoins += 1;
                     }
@@ -178,7 +178,7 @@ export default function Game(){
                     p5.fill(200);
                     p5.rect(p5.width/2-200,590,400,40);
                     p5.fill(0,255,90);
-                    p5.rect(p5.width/2-200,590,400*((click%10)/10.0),40);
+                    p5.rect(p5.width/2-200,590,400*((click%5)/5.0),40);
                 }
                 p5.fill(255,255,0);
                 p5.textSize(45);

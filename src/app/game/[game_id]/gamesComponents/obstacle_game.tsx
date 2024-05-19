@@ -50,6 +50,7 @@ export default function ObstacleGame({kind,scoreUserInfo,setScoreUserInfo,scoreI
             });
         }
         const SCOREBOARD = async(score:number) => {
+            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -282,7 +283,7 @@ export default function ObstacleGame({kind,scoreUserInfo,setScoreUserInfo,scoreI
                 p5.fill(255,255,0);
                 p5.textSize(25);
                 p5.textAlign("center","center");
-                p5.text('GameCoins +'+Math.floor(score*1.5), p5.width / 2, p5.height / 2+35);
+                p5.text('GameCoins +'+Math.floor(score*3), p5.width / 2, p5.height / 2+35);
             }
             p5.textSize(24);
             p5.fill(0);

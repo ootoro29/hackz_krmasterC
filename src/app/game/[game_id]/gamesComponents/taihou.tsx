@@ -52,6 +52,7 @@ export default function TaihoGame({kind,scoreUserInfo,setScoreUserInfo,scoreInfo
             });
         }
         const SCOREBOARD = async(score:number) => {
+            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -167,7 +168,7 @@ export default function TaihoGame({kind,scoreUserInfo,setScoreUserInfo,scoreInfo
                     p5.text(`GAME OVER`, 80, 200);
                     p5.fill(255,255,0);
                     p5.textSize(30);
-                    p5.text(`GameCoins +${Math.floor((score/5)*1.5)}`, 80, 240);
+                    p5.text(`GameCoins +${Math.floor((score/5)*3)}`, 80, 240);
                   }
                 }
               }
