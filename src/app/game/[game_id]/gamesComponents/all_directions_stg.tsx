@@ -51,7 +51,6 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
             });
         }
         const SCOREBOARD = async(score:number) => {
-            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
