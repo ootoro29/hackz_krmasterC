@@ -4,11 +4,11 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { UserInfo } from "@/types/user";
-import { getDatabase, onValue, ref, update } from "firebase/database";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { UserInfo, UserScoreInfo } from "@/types/user";
+import { getDatabase, limitToFirst, onChildAdded, onValue, orderByChild, query, ref, update } from "firebase/database";
 
-export default function AllDirectionsSTG(){
+export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,scoreInfo,setScoreInfo}:{kind:number,scoreUserInfo:UserScoreInfo|null,setScoreUserInfo:Dispatch<SetStateAction<UserScoreInfo|null>>,scoreInfo:Array<UserScoreInfo>,setScoreInfo:Dispatch<SetStateAction<Array<UserScoreInfo>>>}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -38,6 +38,7 @@ export default function AllDirectionsSTG(){
             router.push('/game');
         }
     },[uinf])
+
     
     const sketch = (p5: P5CanvasInstance) => {
         if(!user || !uinf)return;
@@ -47,6 +48,36 @@ export default function AllDirectionsSTG(){
             await update(userInfoRef,{
                 coins:reward
             });
+        }
+        const SCOREBOARD = async(score:number) => {
+            const db = getDatabase();
+            const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+            const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
+            const UPDATE = async() => {
+                await update(gameScoreRef,{
+                    name:user.name,
+                    score:score
+                });
+            }
+            if( scoreUserInfo === null ){
+                UPDATE();
+            }else{
+                if(scoreUserInfo.score < score){
+                    if(findex!=-1){
+                        scoreInfo.sort((a:UserScoreInfo,b:UserScoreInfo) => {
+                            if(a.score > b.score){
+                                return -1;
+                            }
+                            if(a.score < b.score){
+                                return 1;
+                            }
+                            return 0;
+                        });
+                    }
+                    UPDATE();
+                }
+            }
+            
         }
         p5.setup = () => {
             p5.createCanvas(1200, 720);
@@ -146,6 +177,7 @@ export default function AllDirectionsSTG(){
                     if(!game_over){
                         const reward =  uinf.coins + Math.floor(score*1.5);
                         GAMEOVER(reward);
+                        SCOREBOARD(score);
                     }
                     game_over = true;
                     //score+=3;

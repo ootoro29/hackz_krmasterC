@@ -123,7 +123,7 @@ export default function Game(){
                     Gy2 = 0;
                     Gy = 0;
                     GameKind = Math.floor(p5.random(0,ItemList.length));
-                    //GameKind = 0;
+                    //GameKind = 2;
                     const db = getDatabase(); 
                     
                     const dbRef = ref(db, 'userGame');
