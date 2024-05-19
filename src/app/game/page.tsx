@@ -59,6 +59,8 @@ export default function Game(){
         {name:"全方位STG"},
         {name:"四則演算\nゲーム"},
         {name:"避ける\nチーズ"},
+        {name:"避けゲー"},
+        {name:"大砲ゲーム"},
     ];
     const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
         if(!user || !uinf)return;
@@ -123,7 +125,7 @@ export default function Game(){
                     Gy2 = 0;
                     Gy = 0;
                     GameKind = Math.floor(p5.random(0,ItemList.length));
-                    //GameKind = 0;
+                    //GameKind = 2;
                     const db = getDatabase(); 
                     
                     const dbRef = ref(db, 'userGame');
@@ -141,7 +143,7 @@ export default function Game(){
                     })
                 }else if(control == 0 && GameCoins < 150){
                     click++;
-                    if(click % 10 == 0){
+                    if(click % 5 == 0){
                         INCGC(GameCoins+1);
                         GameCoins += 1;
                     }
@@ -176,7 +178,7 @@ export default function Game(){
                     p5.fill(200);
                     p5.rect(p5.width/2-200,590,400,40);
                     p5.fill(0,255,90);
-                    p5.rect(p5.width/2-200,590,400*((click%10)/10.0),40);
+                    p5.rect(p5.width/2-200,590,400*((click%5)/5.0),40);
                 }
                 p5.fill(255,255,0);
                 p5.textSize(45);

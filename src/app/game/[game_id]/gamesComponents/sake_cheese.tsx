@@ -4,12 +4,12 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { UserInfo } from "@/types/user";
-import { getDatabase, onValue, ref, update } from "firebase/database";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { UserInfo, UserScoreInfo } from "@/types/user";
+import { getDatabase, limitToFirst, onChildAdded, onValue, orderByChild, query, ref, update } from "firebase/database";
 
 
-export default function SakeCheese(){
+export default function SakeCheese({kind,scoreUserInfo,setScoreUserInfo,scoreInfo,setScoreInfo}:{kind:number,scoreUserInfo:UserScoreInfo|null,setScoreUserInfo:Dispatch<SetStateAction<UserScoreInfo|null>>,scoreInfo:Array<UserScoreInfo>,setScoreInfo:Dispatch<SetStateAction<Array<UserScoreInfo>>>}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -51,6 +51,36 @@ export default function SakeCheese(){
             await update(userInfoRef,{
                 coins:reward
             });
+        }
+        const SCOREBOARD = async(score:number) => {
+            const db = getDatabase();
+            const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+            const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
+            const UPDATE = async() => {
+                await update(gameScoreRef,{
+                    name:user.name,
+                    score:score
+                });
+            }
+            if( scoreUserInfo === null ){
+                UPDATE();
+            }else{
+                if(scoreUserInfo.score < score){
+                    if(findex!=-1){
+                        scoreInfo.sort((a:UserScoreInfo,b:UserScoreInfo) => {
+                            if(a.score > b.score){
+                                return -1;
+                            }
+                            if(a.score < b.score){
+                                return 1;
+                            }
+                            return 0;
+                        });
+                    }
+                    UPDATE();
+                }
+            }
+            
         }
         //
         //// init
@@ -255,8 +285,9 @@ export default function SakeCheese(){
             //ootoro変更点
             if(!uinf)return;
             if(!game_over){
-                const reward =  uinf.coins + Math.floor(4*(score/10));
+                const reward =  uinf.coins + Math.floor(8*(score/10));
                 finish_process(reward);
+                SCOREBOARD(score);
                 game_over = true;
             }
             // drawing
@@ -270,7 +301,7 @@ export default function SakeCheese(){
             
             p5.textSize(40);
             p5.fill(255,255,0);
-            p5.text(`GameCoins +${Math.floor(4*(score/10))}`,50,p5.height/2+250);
+            p5.text(`GameCoins +${Math.floor(8*(score/10))}`,50,p5.height/2+250);
         }
 
         function scene_gameover() {

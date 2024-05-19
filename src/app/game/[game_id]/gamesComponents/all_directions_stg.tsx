@@ -4,11 +4,11 @@ import SketchComponent from "@/components/SketchComponent";
 import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { UserInfo } from "@/types/user";
-import { getDatabase, onValue, ref, update } from "firebase/database";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { UserInfo, UserScoreInfo } from "@/types/user";
+import { getDatabase, limitToFirst, onChildAdded, onValue, orderByChild, query, ref, update } from "firebase/database";
 
-export default function AllDirectionsSTG(){
+export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,scoreInfo,setScoreInfo}:{kind:number,scoreUserInfo:UserScoreInfo|null,setScoreUserInfo:Dispatch<SetStateAction<UserScoreInfo|null>>,scoreInfo:Array<UserScoreInfo>,setScoreInfo:Dispatch<SetStateAction<Array<UserScoreInfo>>>}){
     const user = useAuth();
     const router = useRouter();
     const [uinf,setUinf] = useState<UserInfo|undefined|null>(undefined);
@@ -38,15 +38,47 @@ export default function AllDirectionsSTG(){
             router.push('/game');
         }
     },[uinf])
+
     
     const sketch = (p5: P5CanvasInstance) => {
         if(!user || !uinf)return;
+        let SP = p5.loadImage('../../image/STGP.png');
         const GAMEOVER = async(reward:number) => {
             const db = getDatabase();
             const userInfoRef = ref(db,`userInfo/${user.id}`);
             await update(userInfoRef,{
                 coins:reward
             });
+        }
+        const SCOREBOARD = async(score:number) => {
+            const db = getDatabase();
+            const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
+            const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
+            const UPDATE = async() => {
+                await update(gameScoreRef,{
+                    name:user.name,
+                    score:score
+                });
+            }
+            if( scoreUserInfo === null ){
+                UPDATE();
+            }else{
+                if(scoreUserInfo.score < score){
+                    if(findex!=-1){
+                        scoreInfo.sort((a:UserScoreInfo,b:UserScoreInfo) => {
+                            if(a.score > b.score){
+                                return -1;
+                            }
+                            if(a.score < b.score){
+                                return 1;
+                            }
+                            return 0;
+                        });
+                    }
+                    UPDATE();
+                }
+            }
+            
         }
         p5.setup = () => {
             p5.createCanvas(1200, 720);
@@ -144,8 +176,9 @@ export default function AllDirectionsSTG(){
                 */
                 if (Enemys[i].hit(player)) {
                     if(!game_over){
-                        const reward =  uinf.coins + Math.floor(score*1.5);
+                        const reward =  uinf.coins + Math.floor(score*3);
                         GAMEOVER(reward);
+                        SCOREBOARD(score);
                     }
                     game_over = true;
                     //score+=3;
@@ -170,7 +203,7 @@ export default function AllDirectionsSTG(){
                 p5.textSize(40);
                 p5.noStroke();
                 p5.fill(255,255,0);
-                p5.text("GameCoins +"+Math.floor(score*1.5),p5.width/2,p5.height/2+80);
+                p5.text("GameCoins +"+Math.floor(score*3),p5.width/2,p5.height/2+80);
             }
         }
         p5.draw = () => {
@@ -223,6 +256,7 @@ export default function AllDirectionsSTG(){
             }
             */
         }
+        let direction = 1;
 
         class Player{
             x:number;
@@ -267,6 +301,22 @@ export default function AllDirectionsSTG(){
                 p5.noStroke();
                 p5.fill(255,0,0);
                 p5.ellipse(this.x,this.y,this.r*2,this.r*2);
+                p5.translate(this.x-this.r*1.5,this.y-this.r*1.5);
+                if(!game_over){
+                    if(p5.mouseX < this.x){
+                        direction = -1;
+                    }else{
+                        direction = 1;
+                    }
+                }
+                if(direction==-1){
+                    p5.scale(-1,1);
+                    p5.image(SP,-this.r*3-20,-this.r*1.5,this.r*6,this.r*6);
+                    p5.scale(-1,1);
+                }else{
+                    p5.image(SP,-this.r*1.5,-this.r*1.5,this.r*6,this.r*6);
+                }
+                p5.translate(-this.x+this.r*1.5,-this.y+this.r*1.5);
                 p5.noFill();
                 p5.stroke(255,255,0);
                 p5.strokeWeight(5);
