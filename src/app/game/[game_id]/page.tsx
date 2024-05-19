@@ -4,6 +4,7 @@ import { P5CanvasInstance } from "@p5-wrapper/react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { db as DB } from "@/lib/firebase";
 import { get, getDatabase, limitToFirst, onChildAdded, onValue, orderByChild, query, ref, remove, update } from "firebase/database";
 import TestGame1 from "./gamesComponents/test_game1";
 import TestGame2 from "./gamesComponents/test_game2";
@@ -14,13 +15,24 @@ import ObstacleGame from "./gamesComponents/obstacle_game";
 import AllDirectionsSTG from "./gamesComponents/all_directions_stg";
 import FourOpeGame from "./gamesComponents/four_operator";
 import SakeCheese from "./gamesComponents/sake_cheese";
-import { UserScoreInfo } from "@/types/user";
+import { User, UserScoreInfo } from "@/types/user";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Game({params}:{params:{game_id:string}}){
     const user = useAuth();
     const router = useRouter();
     const [Game,SetGame] = useState<number|null>(null);
     const [scoreInfo,setScoreInfo] = useState<UserScoreInfo[]>([]);
+
+    const handleGetUser = async(user_id:string) =>{
+        const ref = doc(DB,`users/${user_id}`);
+        const snap = await getDoc(ref);
+        if(snap.exists()){
+            const appUser = (await getDoc(ref)).data() as User;
+            return appUser;
+        }
+        return {id:"",name:""};
+    }
     useEffect(() => {
         if(user === null){
             router.push('/');
@@ -62,7 +74,7 @@ export default function Game({params}:{params:{game_id:string}}){
     const [scoreUserInfo,setScoreUserInfo] = useState<UserScoreInfo|null>(null);
     useEffect(() => {
         if(!user)return;
-        if(!Game)return;
+        if(!Game&& Game!=0)return;
         const db = getDatabase();
         const gameScoreRef = query(ref(db,`gameScore/${Game}/`), limitToFirst(100),orderByChild('/score'))
         
@@ -83,22 +95,29 @@ export default function Game({params}:{params:{game_id:string}}){
             setScoreInfo((prev) => {
                 const findex = prev.findIndex((v) => v.UID == uid);
                 if(findex == -1){
-                    return [...prev,{gameKind:Game,UID:uid,name:null,score:snap.val().score}].sort(orderFunc)
+                    return [...prev,{gameKind:Game,UID:uid,name:snap.val().name,score:snap.val().score}].sort(orderFunc)
                 }else{
-                    return [...prev.slice(0,findex),{gameKind:Game,UID:uid,name:null,score:snap.val().score},...prev.slice(findex+1,prev.length)].sort(orderFunc)
+                    return [...prev.slice(0,findex),{gameKind:Game,UID:uid,name:snap.val().name,score:snap.val().score},...prev.slice(findex+1,prev.length)].sort(orderFunc)
                 }
             })
         });
     },[Game])
     useEffect(() => {
         if(!user)return;
-        if(!Game)return;
+        if(!Game && Game!=0)return;
         const db = getDatabase();
         const gameUserScoreRef = ref(db,`gameScore/${Game}/${user.id}`);
-        return onValue(gameUserScoreRef,(snap) => {
-            if(!snap.val() || !snap.key){return;}
-            const uid:string = snap.key;
-            setScoreUserInfo({gameKind:Game,UID:uid,name:null,score:snap.val().score});
+        return onValue(gameUserScoreRef,async(snap) => {
+            if(!snap.val() || !snap.key){
+                await update(gameUserScoreRef,{
+                    name:user.name,
+                    score:0
+                });
+                setScoreUserInfo({gameKind:Game,UID:user.id,name:user.name,score:0});
+                return;
+            }
+            const uid:string = user.id;
+            setScoreUserInfo({gameKind:Game,UID:uid,name:snap.val().name,score:snap.val().score});
         },{onlyOnce:true})
     },[Game])
     if(user && Game !== null){
@@ -134,6 +153,29 @@ export default function Game({params}:{params:{game_id:string}}){
                     (Game == 4)&&
                     <TestGame5/>
                 }
+                <div style={{position:"absolute",right:20,top:0,background:"FF0000"}}>
+                    {
+                        scoreInfo.map((info,i) => {
+                            let cnt = 0;
+                            if(info.UID == user.id){
+                                return (
+                                    <div key={i}>
+                                        <p>{info.name}</p>
+                                        <p>{info.score}</p>
+                                    </div>
+                                );
+                            }else{
+                                cnt++;
+                                return (
+                                    <div key={i}>
+                                        <p>{`ユーザー${cnt}`}</p>
+                                        <p>{info.score}</p>
+                                    </div>
+                                );
+                            }
+                        })
+                    }
+                </div>
             </div>
         );
     }

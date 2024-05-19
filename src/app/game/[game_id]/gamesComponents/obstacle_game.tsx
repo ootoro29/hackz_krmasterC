@@ -55,6 +55,7 @@ export default function ObstacleGame({kind,scoreUserInfo,setScoreUserInfo,scoreI
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
             const UPDATE = () => {
                 update(gameScoreRef,{
+                    name:user.name,
                     score:score
                 });
             }

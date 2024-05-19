@@ -9,6 +9,6 @@ export type UserInfo = {
 export type UserScoreInfo = {
     gameKind:number;
     UID:string;
-    name:string|null;
+    name:string;
     score:number;
 };

@@ -58,6 +58,7 @@ export default function SakeCheese({kind,scoreUserInfo,setScoreUserInfo,scoreInf
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
             const UPDATE = async() => {
                 await update(gameScoreRef,{
+                    name:user.name,
                     score:score
                 });
             }

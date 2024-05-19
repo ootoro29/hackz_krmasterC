@@ -40,17 +40,6 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
     },[uinf])
 
     
-    useEffect(() => {
-        if(!user)return;
-        const db = getDatabase();
-        const gameUserScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
-        return onValue(gameUserScoreRef,(snap) => {
-            if(!snap.val() || !snap.key){return;}
-            const uid:string = snap.key;
-            setScoreUserInfo({gameKind:kind,UID:uid,name:null,score:snap.val().score});
-        },{onlyOnce:true})
-    },[user])
-    
     const sketch = (p5: P5CanvasInstance) => {
         if(!user || !uinf)return;
         const GAMEOVER = async(reward:number) => {
@@ -66,6 +55,7 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
             const UPDATE = async() => {
                 await update(gameScoreRef,{
+                    name:user.name,
                     score:score
                 });
             }

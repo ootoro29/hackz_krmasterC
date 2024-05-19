@@ -42,16 +42,6 @@ export default function FourOpeGame({kind,scoreUserInfo,setScoreUserInfo,scoreIn
         }
     },[uinf])
     
-    useEffect(() => {
-        if(!user)return;
-        const db = getDatabase();
-        const gameUserScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
-        return onValue(gameUserScoreRef,(snap) => {
-            if(!snap.val() || !snap.key){return;}
-            const uid:string = snap.key;
-            setScoreUserInfo({gameKind:kind,UID:uid,name:null,score:snap.val().score});
-        },{onlyOnce:true})
-    },[user])
 
     const sketch = (p5: P5CanvasInstance) => {
         //ootoro 変更点
@@ -71,6 +61,7 @@ export default function FourOpeGame({kind,scoreUserInfo,setScoreUserInfo,scoreIn
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
             const UPDATE = async() => {
                 await update(gameScoreRef,{
+                    name:user.name,
                     score:score
                 });
             }
