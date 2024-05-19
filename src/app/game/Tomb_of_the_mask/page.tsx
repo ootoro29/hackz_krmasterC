@@ -197,7 +197,7 @@ export default function Game() {
             SaveStage() {
                 if (EditMode == true) {
                     let StageObj = {};
-                    StageObj.StateMat = this.State;
+                    /* StageObj.StateMat = this.State; */
                     p5.saveJSON(StageObj, "../../ToM_Stages/Stage0.json");
                 }
             }
@@ -205,8 +205,9 @@ export default function Game() {
             LoadStage() {
                 if (EditMode == true) {
                     let data = [data1, data2, data3];
-                    let idx = Math.floor(Math.random() * 3) % 3 + 1;
-                    this.State = data[idx].StateMat;
+                    let idx = Math.floor(Math.random() * 3) % 3;
+                    console.log(idx);
+                    /* this.State = data[idx].StateMat; */
                 }
             }
 
