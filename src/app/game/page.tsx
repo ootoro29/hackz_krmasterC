@@ -59,6 +59,8 @@ export default function Game(){
         {name:"全方位STG"},
         {name:"四則演算\nゲーム"},
         {name:"避ける\nチーズ"},
+        {name:"避けゲー"},
+        {name:"大砲ゲーム"},
     ];
     const sketch = (p5: P5CanvasInstance) => {//useStateを使うと再レンダリングされる
         if(!user || !uinf)return;

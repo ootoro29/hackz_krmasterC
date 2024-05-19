@@ -17,6 +17,8 @@ import FourOpeGame from "./gamesComponents/four_operator";
 import SakeCheese from "./gamesComponents/sake_cheese";
 import { User, UserScoreInfo } from "@/types/user";
 import { doc, getDoc } from "firebase/firestore";
+import SakeGame from "./gamesComponents/sakegame";
+import TaihoGame from "./gamesComponents/taihou";
 
 export default function Game({params}:{params:{game_id:string}}){
     const user = useAuth();
@@ -55,6 +57,10 @@ export default function Game({params}:{params:{game_id:string}}){
             const gameRef = ref(db,`userGame/${snap.val().game}`);
             await get(gameRef).then(async(game) => {
                 if(!game){
+                    router.push('/game');
+                    return;
+                }
+                if(!game.val()){
                     router.push('/game');
                     return;
                 }
@@ -151,7 +157,11 @@ export default function Game({params}:{params:{game_id:string}}){
                 }
                 {
                     (Game == 4)&&
-                    <TestGame5/>
+                    <SakeGame kind = {Game} scoreUserInfo={scoreUserInfo} setScoreUserInfo={setScoreUserInfo} scoreInfo={scoreInfo} setScoreInfo={setScoreInfo}/>
+                }
+                {
+                    (Game == 5)&&
+                    <TaihoGame kind = {Game} scoreUserInfo={scoreUserInfo} setScoreUserInfo={setScoreUserInfo} scoreInfo={scoreInfo} setScoreInfo={setScoreInfo}/>
                 }
                 <div style={{position:"absolute",right:20,top:0,background:"FF0000"}}>
                     {
