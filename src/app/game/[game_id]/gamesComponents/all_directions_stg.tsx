@@ -50,6 +50,7 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
             });
         }
         const SCOREBOARD = async(score:number) => {
+            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -202,7 +203,7 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
                 p5.textSize(40);
                 p5.noStroke();
                 p5.fill(255,255,0);
-                p5.text("GameCoins +"+Math.floor(score*1.5),p5.width/2,p5.height/2+80);
+                p5.text("GameCoins +"+Math.floor(score*3),p5.width/2,p5.height/2+80);
             }
         }
         p5.draw = () => {

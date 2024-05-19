@@ -56,6 +56,7 @@ export default function FourOpeGame({kind,scoreUserInfo,setScoreUserInfo,scoreIn
             });
         }
         const SCOREBOARD = async(score:number) => {
+            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -286,7 +287,7 @@ export default function FourOpeGame({kind,scoreUserInfo,setScoreUserInfo,scoreIn
 
             p5.fill(255,255,0);
             p5.textSize(40);
-            p5.text(`GameCoins +${Math.floor(score/10)}`,50,p5.height/2+250);
+            p5.text(`GameCoins +${Math.floor(score/5)}`,50,p5.height/2+250);
         }
     
     };

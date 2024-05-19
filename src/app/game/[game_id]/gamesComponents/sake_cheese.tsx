@@ -53,6 +53,7 @@ export default function SakeCheese({kind,scoreUserInfo,setScoreUserInfo,scoreInf
             });
         }
         const SCOREBOARD = async(score:number) => {
+            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -301,7 +302,7 @@ export default function SakeCheese({kind,scoreUserInfo,setScoreUserInfo,scoreInf
             
             p5.textSize(40);
             p5.fill(255,255,0);
-            p5.text(`GameCoins +${Math.floor(4*(score/10))}`,50,p5.height/2+250);
+            p5.text(`GameCoins +${Math.floor(8*(score/10))}`,50,p5.height/2+250);
         }
 
         function scene_gameover() {
