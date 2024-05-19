@@ -42,6 +42,7 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
     
     const sketch = (p5: P5CanvasInstance) => {
         if(!user || !uinf)return;
+        let SP = p5.loadImage('../../image/STGP.png');
         const GAMEOVER = async(reward:number) => {
             const db = getDatabase();
             const userInfoRef = ref(db,`userInfo/${user.id}`);
@@ -50,7 +51,6 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
             });
         }
         const SCOREBOARD = async(score:number) => {
-            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -176,7 +176,7 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
                 */
                 if (Enemys[i].hit(player)) {
                     if(!game_over){
-                        const reward =  uinf.coins + Math.floor(score*1.5);
+                        const reward =  uinf.coins + Math.floor(score*3);
                         GAMEOVER(reward);
                         SCOREBOARD(score);
                     }
@@ -256,6 +256,7 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
             }
             */
         }
+        let direction = 1;
 
         class Player{
             x:number;
@@ -300,6 +301,22 @@ export default function AllDirectionsSTG({kind,scoreUserInfo,setScoreUserInfo,sc
                 p5.noStroke();
                 p5.fill(255,0,0);
                 p5.ellipse(this.x,this.y,this.r*2,this.r*2);
+                p5.translate(this.x-this.r*1.5,this.y-this.r*1.5);
+                if(!game_over){
+                    if(p5.mouseX < this.x){
+                        direction = -1;
+                    }else{
+                        direction = 1;
+                    }
+                }
+                if(direction==-1){
+                    p5.scale(-1,1);
+                    p5.image(SP,-this.r*3-20,-this.r*1.5,this.r*6,this.r*6);
+                    p5.scale(-1,1);
+                }else{
+                    p5.image(SP,-this.r*1.5,-this.r*1.5,this.r*6,this.r*6);
+                }
+                p5.translate(-this.x+this.r*1.5,-this.y+this.r*1.5);
                 p5.noFill();
                 p5.stroke(255,255,0);
                 p5.strokeWeight(5);

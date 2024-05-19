@@ -50,7 +50,6 @@ export default function ObstacleGame({kind,scoreUserInfo,setScoreUserInfo,scoreI
             });
         }
         const SCOREBOARD = async(score:number) => {
-            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -261,7 +260,7 @@ export default function ObstacleGame({kind,scoreUserInfo,setScoreUserInfo,scoreI
                 obstacles[i].display();
                 if (obstacles[i].hits(player)) {
                     if(!gameover){
-                        const reward =  uinf.coins + Math.floor(score*1.5);
+                        const reward =  uinf.coins + Math.floor(score*3);
                         GAMEOVER(reward);
                         SCOREBOARD(score);
                     }

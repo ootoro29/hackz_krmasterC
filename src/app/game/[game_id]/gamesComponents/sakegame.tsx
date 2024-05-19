@@ -54,7 +54,6 @@ export default function SakeGame({kind,scoreUserInfo,setScoreUserInfo,scoreInfo,
             });
         }
         const SCOREBOARD = async(score:number) => {
-            score *= 2;
             const db = getDatabase();
             const gameScoreRef = ref(db,`gameScore/${kind}/${user.id}`);
             const findex = scoreInfo.findIndex((v) => (v.UID == user.id));
@@ -334,7 +333,7 @@ export default function SakeGame({kind,scoreUserInfo,setScoreUserInfo,scoreInfo,
         function scene_clear() {
             if(!uinf)return;
             if(!game_over){
-                const reward =  uinf.coins + Math.floor(score*3);
+                const reward =  uinf.coins + Math.floor(score*6);
                 GAMEFINISH(reward);
                 SCOREBOARD(score);
                 game_over = true;
